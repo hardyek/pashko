@@ -163,7 +163,9 @@ class PashkoModel(nn.Module):
 
         x = x.view(-1, self.config.vocab_size) #Loss Calculation
         targets = targets.view(-1)
-        loss = self.LossFunction(x, targets)
+
+        padding_mask = (targets != -1)
+        loss = self.LossFunction(x[padding_mask], targets[padding_mask])
         return x, loss
     
     @torch.no_grad()
@@ -182,11 +184,17 @@ class PashkoModel(nn.Module):
         response = []
 
         x = torch.LongTensor(self.Encoder.encode(context))
+        next_token = 0
 
         for _ in range(max_new_tokens):
             x = x if x.size(0) <= self.config.sequence_length else x[:, -self.config.sequence_length:]
 
             next_token = self.inference(x)
+
+            if next_token == 50256:
+                return response
+
+            next_token = '' if next_token == -1 else next_token #Exclude padding tokens
 
             response.append(next_token.numpy()[0])
 
@@ -194,6 +202,9 @@ class PashkoModel(nn.Module):
                 print(self.Encoder.decode(next_token.numpy()), end='', flush=True)
 
             x = torch.cat((x, next_token), dim=0)
+        
+        return response
+    
     #Utils
     def init_weights(self, module):
         if isinstance(module, nn.Linear):
