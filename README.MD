@@ -10,4 +10,4 @@
 
 <b>computation-calculations.ipynb</b> - Some calculations to estimate training time
 
-<b>train.py</b> - Training script for the model <i>(unfinished)</i>
+<b>train.py</b> - Training script for the model
